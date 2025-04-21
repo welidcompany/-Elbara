@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - متجر البراء</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f0f0; margin: 0; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; margin-top: 40px; }
+        h1 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 10px; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 6px; }
+        button:hover { background: #0056b3; }
+        .products, .orders { margin-top: 30px; }
+        .product, .order { padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; }
+        .login { max-width: 400px; margin: auto; margin-top: 100px; background: white; padding: 20px; border-radius: 12px; text-align: center; }
+        nav { text-align: center; margin-bottom: 20px; }
+        nav button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="login" id="loginPage">
+        <h2>تسجيل الدخول</h2>
+        <input type="text" id="adminId" placeholder="رقم المستخدم">
+        <input type="password" id="adminPass" placeholder="كلمة المرور">
+        <button onclick="login()">دخول</button>
+    </div>
+
+    <div class="container" id="adminPanel" style="display:none">
+        <h1>لوحة التحكم</h1>
+        <nav>
+            <button onclick="showSection('productsSection')">المنتجات</button>
+            <button onclick="showSection('ordersSection')">الطلبات</button>
+        </nav>
+
+        <div id="productsSection">
+            <div class="form-group">
+                <label>اسم المنتج:</label>
+                <input type="text" id="productName">
+            </div>
+            <div class="form-group">
+                <label>وصف المنتج:</label>
+                <textarea id="productDesc"></textarea>
+            </div>
+            <div class="form-group">
+                <label>رابط صورة المنتج:</label>
+                <input type="text" id="productImg">
+            </div>
+            <div class="form-group">
+                <label>سعر المنتج:</label>
+                <input type="text" id="productPrice">
+            </div>
+            <button onclick="addProduct()">إضافة المنتج</button>
+            <div class="products" id="productList"></div>
+        </div>
+
+        <div id="ordersSection" style="display:none">
+            <h2>الطلبات</h2>
+            <div class="orders" id="orderList"></div>
+        </div>
+    </div>
+
+    <script>
+        const adminId = "31484257";
+        const adminPass = "1234azer@#$";
+
+        function login() {
+            const id = document.getElementById("adminId").value;
+            const pass = document.getElementById("adminPass").value;
+            if (id === adminId && pass === adminPass) {
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("adminPanel").style.display = "block";
+                loadProducts();
+                loadOrders();
+            } else {
+                alert("بيانات الدخول غير صحيحة");
+            }
+        }
+
+        function showSection(sectionId) {
+            document.getElementById("productsSection").style.display = sectionId === 'productsSection' ? 'block' : 'none';
+            document.getElementById("ordersSection").style.display = sectionId === 'ordersSection' ? 'block' : 'none';
+        }
+
+        function addProduct() {
+            const name = document.getElementById("productName").value;
+            const desc = document.getElementById("productDesc").value;
+            const img = document.getElementById("productImg").value;
+            const price = document.getElementById("productPrice").value;
+            const product = { name, desc, img, price };
+            let products = JSON.parse(localStorage.getItem("products") || "[]");
+            products.push(product);
+            localStorage.setItem("products", JSON.stringify(products));
+            loadProducts();
+        }
+
+        function loadProducts() {
+            const productList = document.getElementById("productList");
+            productList.innerHTML = "";
+            let products = JSON.parse(localStorage.getItem("products") || "[]");
+            products.forEach((p, i) => {
+                productList.innerHTML += `
+                    <div class="product">
+                        <strong>${p.name}</strong><br>
+                        <img src="${p.img}" width="100"><br>
+                        ${p.desc}<br>
+                        <strong>${p.price} د.ج</strong><br>
+                        <button onclick="editProduct(${i})">تعديل</button>
+                        <button onclick="deleteProduct(${i})">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteProduct(index) {
+            let products = JSON.parse(localStorage.getItem("products") || "[]");
+            products.splice(index, 1);
+            localStorage.setItem("products", JSON.stringify(products));
+            loadProducts();
+        }
+
+        function editProduct(index) {
+            let products = JSON.parse(localStorage.getItem("products") || "[]");
+            const p = products[index];
+            document.getElementById("productName").value = p.name;
+            document.getElementById("productDesc").value = p.desc;
+            document.getElementById("productImg").value = p.img;
+            document.getElementById("productPrice").value = p.price;
+            deleteProduct(index);
+        }
+
+        function loadOrders() {
+            const orderList = document.getElementById("orderList");
+            orderList.innerHTML = "";
+            let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+            orders.forEach((o, i) => {
+                orderList.innerHTML += `
+                    <div class="order">
+                        <strong>المنتج:</strong> ${o.product}<br>
+                        <strong>الاسم:</strong> ${o.name}<br>
+                        <strong>رقم الهاتف:</strong> ${o.phone}<br>
+                        <strong>صورة الدفع:</strong><br><img src="${o.payment}" width="100"><br>
+                        <button onclick="deleteOrder(${i})">حذف الطلب</button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteOrder(index) {
+            let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+            orders.splice(index, 1);
+            localStorage.setItem("orders", JSON.stringify(orders));
+            loadOrders();
+        }
+    </script>
+</body>
+</html>
